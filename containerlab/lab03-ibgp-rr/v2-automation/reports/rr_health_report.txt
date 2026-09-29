@@ -1,0 +1,15 @@
+iBGP ROUTE REFLECTOR HEALTH REPORT
+
+R1 -> RR Session: PASS
+R3 -> RR Session: PASS
+
+R1 Reflected Route 3.3.3.3/32: PASS
+R3 Reflected Route 1.1.1.1/32: PASS
+
+R1 RIB Route 3.3.3.3/32: PASS
+R3 RIB Route 1.1.1.1/32: PASS
+
+R1 Ping 1.1.1.1 -> 3.3.3.3: PASS
+R3 Ping 3.3.3.3 -> 1.1.1.1: PASS
+
+iBGP RR LAB STATUS: HEALTHY
