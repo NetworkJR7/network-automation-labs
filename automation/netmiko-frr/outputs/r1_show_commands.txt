@@ -1,0 +1,59 @@
+
+=============== ROUTING TABLE ===============
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+K>* 0.0.0.0/0 [0/0] via 172.20.20.1, eth0, 00:04:31
+O   1.1.1.1/32 [110/0] is directly connected, lo, weight 1, 00:04:31
+C>* 1.1.1.1/32 is directly connected, lo, 00:04:31
+C>* 172.20.20.0/24 is directly connected, eth0, 00:04:31
+
+=============== OSPF ===============
+ OSPF Routing Process, Router ID: 1.1.1.1
+ Supports only single TOS (TOS0) routes
+ This implementation conforms to RFC2328
+ RFC1583Compatibility flag is disabled
+ OpaqueCapability flag is disabled
+ Initial SPF scheduling delay 0 millisec(s)
+ Minimum hold time between consecutive SPFs 50 millisec(s)
+ Maximum hold time between consecutive SPFs 5000 millisec(s)
+ Hold time multiplier is currently 1
+ SPF algorithm last executed 4m31s ago
+ Last SPF duration 12 usecs
+ SPF timer is inactive
+ LSA minimum interval 5000 msecs
+ LSA minimum arrival 1000 msecs
+ Write Multiplier set to 20 
+ Refresh timer 10 secs
+ Maximum multiple paths(ECMP) supported 64
+ Administrative distance 110
+ Number of external LSA 0. Checksum Sum 0x00000000
+ Number of opaque AS LSA 0. Checksum Sum 0x00000000
+ Number of areas attached to this router: 1
+ Area ID: 0.0.0.0 (Backbone)
+   Number of interfaces in this area: Total: 1, Active: 1
+   Number of fully adjacent neighbors in this area: 0
+   Area has no authentication
+   SPF algorithm executed 1 times
+   Number of LSA 1
+   Number of router LSA 1. Checksum Sum 0x0000a0a6
+   Number of network LSA 0. Checksum Sum 0x00000000
+   Number of summary LSA 0. Checksum Sum 0x00000000
+   Number of ASBR summary LSA 0. Checksum Sum 0x00000000
+   Number of NSSA LSA 0. Checksum Sum 0x00000000
+   Number of opaque link LSA 0. Checksum Sum 0x00000000
+   Number of opaque area LSA 0. Checksum Sum 0x00000000
+
+
+
+=============== INTERFACES ===============
+Interface       Status  VRF             Addresses
+---------       ------  ---             ---------
+eth0            up      default         172.20.20.2/24
+                                        + 3fff:172:20:20::2/64
+lo              up      default         1.1.1.1/32
+

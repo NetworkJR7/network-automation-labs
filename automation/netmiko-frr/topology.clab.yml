@@ -1,0 +1,11 @@
+name: netmiko-frr
+
+topology:
+  nodes:
+    r1:
+      kind: linux
+      image: frr-netmiko:lab
+      binds:
+        - r1/daemons:/etc/frr/daemons
+        - r1/frr.conf:/etc/frr/frr.conf
+        - r1/vtysh.conf:/etc/frr/vtysh.conf

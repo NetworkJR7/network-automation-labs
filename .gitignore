@@ -1,0 +1,19 @@
+# Containerlab generated directories
+**/clab-*/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Logs / temporary files
+*.log
+*.tmp
+
+# Editors
+.vscode/
+.idea/
+
+# OS
+.DS_Store

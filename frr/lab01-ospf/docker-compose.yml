@@ -1,0 +1,27 @@
+services:
+  r1:
+    image: frrouting/frr:latest
+    container_name: r1
+    privileged: true
+    networks:
+      ospf_net:
+        ipv4_address: 172.30.12.11
+    volumes:
+      - ./r1:/etc/frr
+
+  r2:
+    image: frrouting/frr:latest
+    container_name: r2
+    privileged: true
+    networks:
+      ospf_net:
+        ipv4_address: 172.30.12.12
+    volumes:
+      - ./r2:/etc/frr
+
+networks:
+  ospf_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.12.0/24
