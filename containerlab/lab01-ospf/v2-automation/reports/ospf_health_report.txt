@@ -1,0 +1,10 @@
+OSPF HEALTH REPORT
+
+R1 Neighbor 2.2.2.2: PASS
+R2 Neighbor 1.1.1.1: PASS
+R1 Route 2.2.2.2/32: PASS
+R2 Route 1.1.1.1/32: PASS
+R1 Ping 1.1.1.1 -> 2.2.2.2: PASS
+R2 Ping 2.2.2.2 -> 1.1.1.1: PASS
+
+OSPF LAB STATUS: HEALTHY
