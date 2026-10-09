@@ -1,497 +1,387 @@
 # Network Automation Labs
 
-Hands-on networking and network automation labs focused on building practical skills from foundational networking concepts to scalable enterprise and datacenter automation.
+Hands-on networking and automation labs built to explore how modern networks are designed, validated, and troubleshot.
 
-## Mission
+The repository progresses from protocol fundamentals and manual CLI verification to Python-based expected-state validation. Each automated lab checks more than reachability: it correlates control-plane state, routing information, forwarding behavior, and the intended network outcome.
 
-This repository documents a progressive journey in modern network engineering.
+> **Start here:** Choose a protocol in [Quick Navigation](#quick-navigation). Open the **Manual Lab** to study the topology and FRRouting configuration, or go directly to **Automated v2** to review the validation workflow, fault injection, and health report.
 
-The goal is to start with networking fundamentals, Linux, containers, routing protocols and small automation tasks, then progressively move toward larger and more complex enterprise and datacenter environments.
+## Start Here
 
-Rather than treating automation as a separate subject, the labs combine **networking, troubleshooting and automation** from the beginning.
+There are two ways to use this repository:
 
-The long-term objective is to develop the skills required to **deploy, validate, troubleshoot and automate network infrastructures reliably and at scale**.
+1. **Learn and troubleshoot the network manually** — inspect the topology, review the FRRouting configuration, deploy the lab, and verify protocol behavior from the CLI.
+2. **Study network validation automation** — inspect the expected state, run the Python health check, introduce a controlled fault, and confirm that the failure is detected and reported.
 
----
-
-## Learning Path
+New to the project? Follow the labs in order:
 
 ```text
-Linux Networking
-       ↓
-Docker
-       ↓
-FRRouting
-       ↓
-OSPF
-       ↓
-Containerlab
-       ↓
-eBGP
-       ↓
-iBGP / Route Reflector
-       ↓
-BGP Policy
-       ↓
-Python
-       ↓
-Netmiko
-       ↓
-Ansible
-       ↓
-Spine-Leaf Architecture
-       ↓
-VXLAN
-       ↓
-BGP EVPN
-       ↓
-Automated Validation
-       ↓
-Fault Detection & Troubleshooting
-       ↓
-Scalable Datacenter Automation
+OSPF → eBGP → iBGP Route Reflector → BGP Policy
 ```
 
----
+Interested mainly in automation? Start with [Lab 01 v2](containerlab/lab01-ospf/v2-automation/README.md) and follow the progression from adjacency checks to routing-intent validation.
+
+## Quick Navigation
+
+| Lab | Focus | Manual Lab | Automated v2 |
+|---|---|---|---|
+| Lab 01 | OSPF | [Topology and FRR configuration](containerlab/lab01-ospf/) | [OSPF automated validation](containerlab/lab01-ospf/v2-automation/README.md) |
+| Lab 02 | eBGP | [Topology and FRR configuration](containerlab/lab02-ebgp/) | [eBGP automated validation](containerlab/lab02-ebgp/v2-automation/README.md) |
+| Lab 03 | iBGP Route Reflector | [Topology and FRR configuration](containerlab/lab03-ibgp-rr/) | [Route Reflector automated validation](containerlab/lab03-ibgp-rr/v2-automation/README.md) |
+| Lab 04 | BGP Policy | [Topology and FRR configuration](containerlab/lab04-bgp-policy/) | [BGP policy and intent validation](containerlab/lab04-bgp-policy/v2-automation/README.md) |
+
+Additional foundations:
+
+- [FRRouting OSPF lab with Docker Compose](frr/lab01-ospf/)
+- [Netmiko and FRRouting automation exercise](automation/netmiko-frr/)
+
+## Learning Paths
+
+### 1. Routing Fundamentals
+
+Use the manual labs to understand protocol behavior before automating it.
+
+```text
+OSPF adjacency and route exchange
+              ↓
+eBGP peering and path learning
+              ↓
+iBGP scaling with a Route Reflector
+              ↓
+BGP path selection and routing policy
+```
+
+### 2. Network Automation and Validation
+
+Use the v2 labs to turn operational checks into repeatable validation.
+
+```text
+Define expected state
+          ↓
+Collect live network state
+          ↓
+Validate control plane, RIB, and data plane
+          ↓
+Return clear PASS / FAIL results
+          ↓
+Generate a persistent health report
+```
+
+### 3. Troubleshooting Practice
+
+Treat each healthy topology as a baseline, introduce one controlled failure, and work through the evidence in layers:
+
+```text
+Session or adjacency → Learned paths → Installed route → Forwarding → Intended outcome
+```
+
+## Manual Labs vs Automated v2
+
+The two versions serve different but complementary purposes.
+
+| Manual Lab | Automated v2 |
+|---|---|
+| Defines the Containerlab topology | Reuses the same network topology |
+| Contains the FRRouting configuration | Adds an expected-state inventory |
+| Encourages direct CLI inspection | Collects operational state programmatically |
+| Builds protocol and troubleshooting knowledge | Produces repeatable PASS / FAIL checks |
+| Answers “how does this protocol behave?” | Answers “is the network behaving as designed?” |
+
+The v2 labs are not configuration-deployment pipelines. Their current focus is **automated validation and fault detection**. The Python scripts interact with the running FRRouting containers, parse relevant state, compare it with the expected outcome, and write a health report.
+
+## Current Labs
+
+### Lab 01 — OSPF
+
+A two-router Area 0 topology focused on adjacency formation, route learning, and loopback reachability.
+
+The automated version validates:
+
+- Expected OSPF neighbors in `Full` state
+- OSPF-learned loopback routes
+- Source-specific loopback-to-loopback reachability
+- Persistent healthy or unhealthy status reporting
+
+It also demonstrates why a generic ping can be misleading when a separate management network exists.
+
+**Explore:** [Manual Lab](containerlab/lab01-ospf/) · [Automated v2](containerlab/lab01-ospf/v2-automation/README.md)
+
+### Lab 02 — eBGP
+
+A two-AS topology introducing external BGP peering, prefix exchange, AS-path inspection, RIB installation, and end-to-end reachability.
+
+The automated version validates:
+
+- BGP session state and expected remote ASN
+- Expected prefixes and AS-path information
+- BGP routes installed in the routing table
+- Source-specific data-plane reachability
+- Failure detection and recovery evidence
+
+The central lesson is that an established BGP session is necessary, but it is not sufficient proof of a healthy service.
+
+**Explore:** [Manual Lab](containerlab/lab02-ebgp/) · [Automated v2](containerlab/lab02-ebgp/v2-automation/README.md)
+
+### Lab 03 — iBGP Route Reflector
+
+A three-router iBGP topology using a Route Reflector to avoid a full-mesh design.
+
+The automated version validates:
+
+- iBGP session state
+- Correct route reflection between clients
+- Originator ID and Cluster ID
+- Expected next-hop behavior
+- RIB installation and loopback reachability
+- Route Reflector client and non-client failure scenarios
+
+This lab moves validation beyond simple prefix presence and checks the attributes that explain how and why a route was propagated.
+
+**Explore:** [Manual Lab](containerlab/lab03-ibgp-rr/) · [Automated v2](containerlab/lab03-ibgp-rr/v2-automation/README.md)
+
+### Lab 04 — BGP Policy
+
+A three-router, multi-AS topology in which R1 receives the same prefix from two upstream peers and must prefer the path defined by routing policy.
+
+The automated version validates:
+
+- Both eBGP sessions and both available paths
+- Local Preference on the preferred path
+- Correct best-path selection
+- Presence of a non-best backup path
+- Expected next-hop in the RIB
+- End-to-end routing intent, not only protocol state
+
+This is the first lab in the series to frame network health explicitly as **intent validation**: reachability may still exist while the selected path is wrong.
+
+**Explore:** [Manual Lab](containerlab/lab04-bgp-policy/) · [Automated v2](containerlab/lab04-bgp-policy/v2-automation/README.md)
 
 ## Repository Structure
 
 ```text
-network-labs/
-│
-├── frr/
-│   └── lab01-ospf/
+network-automation-labs/
+├── automation/
+│   └── netmiko-frr/
+│       ├── netmiko_test.py
+│       ├── topology.clab.yml
+│       ├── r1/
+│       └── outputs/
 │
 ├── containerlab/
 │   ├── lab01-ospf/
+│   │   ├── topology.clab.yml
+│   │   ├── r1/
+│   │   ├── r2/
+│   │   └── v2-automation/
+│   │       ├── README.md
+│   │       ├── inventory.yaml
+│   │       ├── ospf_health_check.py
+│   │       ├── images/
+│   │       └── reports/
+│   │
 │   ├── lab02-ebgp/
+│   │   ├── topology.clab.yml
+│   │   ├── r1/
+│   │   ├── r2/
+│   │   └── v2-automation/
+│   │       ├── README.md
+│   │       ├── inventory.yaml
+│   │       ├── bgp_health_check.py
+│   │       ├── images/
+│   │       └── reports/
+│   │
 │   ├── lab03-ibgp-rr/
+│   │   ├── topology.clab.yml
+│   │   ├── r1/
+│   │   ├── r2/
+│   │   ├── r3/
+│   │   └── v2-automation/
+│   │       ├── README.md
+│   │       ├── inventory.yaml
+│   │       ├── rr_health_check.py
+│   │       ├── images/
+│   │       └── reports/
+│   │
 │   └── lab04-bgp-policy/
+│       ├── topology.clab.yml
+│       ├── r1/
+│       ├── r2/
+│       ├── r3/
+│       └── v2-automation/
+│           ├── README.md
+│           ├── inventory.yaml
+│           ├── policy_health_check.py
+│           ├── images/
+│           └── reports/
 │
-├── automation/
-│   └── netmiko-frr/
-│
-├── ansible/
-├── docker/
-├── python/
+├── frr/
+│   └── lab01-ospf/
+│       ├── docker-compose.yml
+│       ├── r1/
+│       └── r2/
 │
 └── README.md
 ```
 
----
+## Automation Philosophy
 
-# Current Labs
+Automation is most useful when it verifies an intended outcome, not when it merely repeats CLI commands faster.
 
-## FRRouting
+The working model in this repository is:
 
-### Lab 01 — OSPF with Docker Compose
-
-Introduction to FRRouting using containers.
-
-Main topics:
-
-- FRRouting configuration
-- Docker Compose
-- IPv4 addressing
-- OSPF
-- Neighbor establishment
-- Routing table verification
-- Loopback reachability
-- Basic troubleshooting
-
-Typical verification commands:
-
-```bash
-vtysh -c "show ip ospf neighbor"
-vtysh -c "show ip route"
-vtysh -c "show running-config"
+```text
+Topology and routing intent
+            ↓
+Expected state in YAML
+            ↓
+Operational data collection
+            ↓
+Protocol-aware validation
+            ↓
+Control plane + RIB + data plane correlation
+            ↓
+PASS / FAIL result and health report
 ```
 
----
+The core principles are:
 
-## Containerlab
+- **Expected state before validation** — define what healthy means for each node and protocol.
+- **Multiple layers of evidence** — a session being up does not prove that routes, forwarding, or policy are correct.
+- **Clear failure signals** — checks should identify the layer that failed, not only return a generic error.
+- **Persistent reporting** — every automated lab writes a report that can be reviewed after execution.
+- **Troubleshooting value** — automation should reduce the time between detecting a symptom and locating the likely fault domain.
 
-Containerlab is used to build reproducible multi-router network topologies with FRRouting.
+## Troubleshooting First
 
-### Lab 01 — OSPF
+Every lab is designed to answer two questions:
 
-Two-router OSPF topology using FRRouting and Containerlab.
+```text
+How does the network work when it is healthy?
+How does the failure appear at each validation layer?
+```
 
-Topics:
+The v2 documentation includes controlled fault scenarios and recovery steps. Typical investigation areas include:
 
-- Containerlab topology definition
-- FRR configuration
-- OSPF Area 0
-- Neighbor establishment
-- Route exchange
-- Connectivity validation
+- Incorrect addressing or autonomous system numbers
+- OSPF adjacency failures
+- BGP session failures
+- Missing or incorrect route advertisements
+- Unreachable BGP next hops
+- Incorrect Route Reflector client relationships
+- Routes present in BGP but absent from the RIB
+- Routing-policy errors and incorrect best-path selection
+- False-positive reachability through the management network
 
----
+Useful FRRouting commands across the labs include:
 
-### Lab 02 — eBGP
-
-Introduction to External BGP.
-
-Topics:
-
-- Different Autonomous Systems
-- eBGP neighbor establishment
-- Network advertisement
-- BGP routing table
-- Best-path verification
-- End-to-end reachability
-
-Example verification:
-
-```bash
+```text
+show ip ospf neighbor
+show ip route
 show bgp summary
 show bgp ipv4 unicast
 show ip route bgp
-```
-
----
-
-### Lab 03 — iBGP Route Reflector
-
-Multi-router iBGP topology implementing a Route Reflector.
-
-Topics:
-
-- iBGP
-- Route Reflector
-- RR clients
-- Originator ID
-- Cluster ID
-- Next-hop behavior
-- `next-hop-self`
-- BGP route propagation
-
-This lab explores how Route Reflectors reduce the need for a full-mesh iBGP topology.
-
----
-
-### Lab 04 — BGP Policy
-
-Introduction to BGP path manipulation and routing policy.
-
-Topics include:
-
-- BGP path selection
-- Local Preference
-- Route Maps
-- Prefix filtering
-- Policy application
-- Routing verification
-- Troubleshooting incorrect path selection
-
-The goal is to move beyond basic BGP connectivity and understand how routing decisions can be controlled.
-
----
-
-# Network Automation
-
-## Netmiko + FRRouting
-
-The first automation lab introduces Python-based device interaction using Netmiko.
-
-The objective is to move from manual CLI operations such as:
-
-```bash
-show ip route
-show bgp summary
 show running-config
 ```
 
-toward automated command execution and result collection.
+## Technologies
 
-Current capabilities include:
+### Used in the Current Repository
 
-- SSH connectivity
-- Automated command execution
-- FRRouting interaction
-- Output collection
-- Saving command results to files
-- Basic validation workflow
-
-Example concept:
-
-```text
-Python Script
-     │
-     ▼
-  Netmiko
-     │
-     ▼
-FRRouting Node
-     │
-     ▼
-Show Commands
-     │
-     ▼
-Collected Output
-```
-
-This is the foundation for more advanced network validation and troubleshooting automation.
-
----
-
-# Automation Philosophy
-
-The objective of these labs is not simply to automate configuration.
-
-A reliable network automation workflow should include:
-
-```text
-Inventory
-    ↓
-Connection
-    ↓
-Data Collection
-    ↓
-Validation
-    ↓
-Decision
-    ↓
-Configuration
-    ↓
-Verification
-    ↓
-Reporting
-```
-
-Automation should be able to answer questions such as:
-
-```text
-Are all OSPF neighbors established?
-
-Are all BGP sessions up?
-
-Are the expected routes present?
-
-Is the correct BGP path selected?
-
-Are all VTEPs reachable?
-
-Are VXLAN VNIs operational?
-
-Are EVPN routes being exchanged?
-
-Is the fabric healthy?
-```
-
-Eventually the objective is to produce automated health checks such as:
-
-```text
-OSPF              PASS
-BGP               PASS
-BGP EVPN          PASS
-VTEP Reachability PASS
-VXLAN             PASS
-Route Validation  PASS
-
-FABRIC STATUS: HEALTHY
-```
-
----
-
-# Roadmap
-
-The repository will progressively expand into more advanced networking and automation topics.
-
-## Python for Networking
-
-- Variables and data structures
-- Lists and dictionaries
-- Loops
-- Functions
-- JSON
-- YAML
-- Exception handling
-- File operations
-- Network inventory management
-
----
-
-## Netmiko
-
-- Multi-device connections
-- Command execution
-- Configuration deployment
-- Output parsing
-- Health checks
-- Error handling
-- Logging
-- Automated troubleshooting
-
----
-
-## Ansible
-
-- Inventory management
-- Variables
-- Playbooks
-- Templates
-- Jinja2
-- Automated configuration deployment
-- Configuration validation
-- Idempotent network changes
-
----
-
-## Datacenter Networking
-
-Future labs will introduce modern datacenter technologies including:
-
-- Spine-Leaf architecture
-- Underlay and overlay networks
-- eBGP underlay
-- VXLAN
-- VTEPs
-- VNIs
-- BGP EVPN
-- EVPN Route Types
-- Distributed Layer 2 and Layer 3 services
-
----
-
-## Datacenter Automation
-
-The final stages of the learning path will combine networking and automation.
-
-Example target architecture:
-
-```text
-            Automation
-          Python / Ansible
-                │
-                ▼
-       ┌─────────────────┐
-       │     SPINE       │
-       └───────┬─────────┘
-          eBGP │ Underlay
-     ┌─────────┼─────────┐
-     │         │         │
-     ▼         ▼         ▼
-   LEAF1     LEAF2     LEAF3
-     │         │         │
-     └──── VXLAN / EVPN ─┘
-```
-
-Automation will eventually handle:
-
-- Device inventory
-- Configuration generation
-- BGP deployment
-- VXLAN configuration
-- EVPN configuration
-- Pre-change validation
-- Post-change validation
-- Health checks
-- Fault detection
-- Automated troubleshooting
-- Network state reporting
-
----
-
-# Technologies
-
-Technologies used or planned in this repository include:
-
-- Linux Networking
-- Docker
-- Docker Compose
-- FRRouting
+- Linux networking
+- Docker and Docker Compose
 - Containerlab
-- OSPF
-- BGP
-- eBGP
-- iBGP
-- Route Reflectors
-- BGP Policy
+- FRRouting (FRR) and `vtysh`
+- OSPF, eBGP, iBGP, Route Reflectors, and BGP policy
 - Python
-- Netmiko
-- Ansible
-- Jinja2
-- VXLAN
-- BGP EVPN
-- Git
-- GitHub
+- YAML-based expected-state inventories
+- `subprocess` and `docker exec` for v2 state collection
+- Netmiko in the standalone FRRouting automation exercise
+- Git and GitHub
 
----
+### Planned for Future Stages
 
-# Troubleshooting First
+- Multi-device inventory and expected-state models
+- Configuration generation and reusable templates
+- Ansible and Jinja2 workflows
+- Pre-change and post-change validation
+- Spine–Leaf underlay design
+- VXLAN data plane and VTEP validation
+- BGP EVPN control plane
+- Fabric-wide health checks and automation
 
-Troubleshooting is an important part of every lab.
+## Roadmap
 
-Each topology is intended not only to demonstrate a working configuration but also to help understand why networks fail.
+Labs 01–04 and their automated v2 validation workflows are the current completed progression in this repository. The next stages are intentionally listed as roadmap items, not as completed implementations.
 
-Typical troubleshooting areas include:
+### Next — Scale the Validation Model
 
-- Incorrect IP addressing
-- OSPF adjacency failures
-- MTU mismatches
-- Missing routing advertisements
-- BGP neighbor failures
-- Incorrect ASN configuration
-- Next-hop reachability problems
-- Route Reflector configuration errors
-- Routing policy mistakes
-- VXLAN VTEP connectivity
-- EVPN control-plane issues
+- Replace lab-specific assumptions with a multi-device inventory model
+- Express expected neighbors, prefixes, attributes, and next hops as reusable data
+- Produce aggregated results across the topology
+- Improve parsing, exception handling, and failure summaries
+- Add repeatable pre-change and post-change checks
 
-The objective is to understand both:
+### Then — Spine–Leaf Underlay
+
+- Build a small multi-device Spine–Leaf topology
+- Validate point-to-point addressing and eBGP underlay sessions
+- Check loopback advertisement and end-to-end underlay reachability
+- Extend expected-state validation from individual labs to a fabric view
+
+### Next — VXLAN and BGP EVPN
+
+- Introduce VTEPs, VNIs, and overlay reachability
+- Add the BGP EVPN address family and relevant EVPN route types
+- Correlate EVPN control-plane state with VXLAN data-plane state
+- Validate VTEP reachability, VNI presence, and tenant connectivity
+
+### Target — Fabric Automation
+
+- Generate device configuration from structured data
+- Apply consistent changes across multiple nodes
+- Validate intended state before and after a change
+- Detect protocol, policy, and forwarding failures at fabric scale
+- Produce a consolidated fabric health report
 
 ```text
-How to build it
+Current: OSPF → eBGP → iBGP RR → BGP Policy → Automated Validation
+Next:    Multi-device Expected State → Spine–Leaf → VXLAN → EVPN → Fabric Automation
 ```
 
-and:
+## GitHub and Portfolio
+
+This repository is both a learning environment and a technical portfolio. It is intended to make the engineering process visible, not only the final working configuration.
+
+The project demonstrates:
+
+- Progressive routing-protocol labs built with reproducible container topologies
+- FRRouting configuration and protocol verification
+- Troubleshooting through controlled fault injection
+- Python automation based on expected versus actual state
+- Validation across the control plane, routing table, and data plane
+- Clear technical documentation, diagrams, and saved health reports
+
+**Repository:** [NetworkJR7/network-automation-labs](https://github.com/NetworkJR7/network-automation-labs)  
+**GitHub profile:** [github.com/NetworkJR7](https://github.com/NetworkJR7)
+
+If you arrived here from a portfolio post or technical discussion, [Quick Navigation](#quick-navigation) is the fastest way to compare the manual protocol work with its automated validation layer.
+
+## Project Direction
+
+The long-term goal is to move from small, protocol-focused exercises toward repeatable validation and automation for enterprise and datacenter networks.
 
 ```text
-How to troubleshoot it when it breaks
+Manual networking
+        ↓
+Protocol-aware troubleshooting
+        ↓
+Expected-state validation
+        ↓
+Multi-device automation
+        ↓
+Datacenter fabric validation
+        ↓
+Reliable network automation at scale
 ```
 
----
-
-# Long-Term Goal
-
-The final goal of this repository is to progress from small networking labs toward automated enterprise and datacenter fabrics.
-
-```text
-Manual Networking
-        ↓
-CLI Verification
-        ↓
-Python Automation
-        ↓
-Multi-Device Automation
-        ↓
-Configuration Generation
-        ↓
-Automated Validation
-        ↓
-Automated Troubleshooting
-        ↓
-Datacenter Fabric Automation
-        ↓
-Network Automation at Scale
-```
-
-This repository is therefore not intended to be a collection of isolated exercises.
-
-It is a **progressive engineering lab environment** for learning how modern networks are built, operated, validated and automated.
-
----
-
-## Related Projects
-
-More advanced and specialized projects are maintained separately, including labs focused on:
-
-- BGP Route Reflectors
-- Spine-Leaf networking
-- VXLAN
-- EVPN
-- EVPN fabric automation
-- Automated network health checks
-
-These projects expand on the foundations developed in this repository.
+This is an evolving hands-on project. Completed work is documented as current labs; planned technologies remain clearly identified in the roadmap.
