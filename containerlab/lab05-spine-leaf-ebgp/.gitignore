@@ -1,0 +1,9 @@
+clab-*/
+__pycache__/
+*.pyc
+.venv/
+venv/
+*_backup.py
+fabric_health_check_v2_1.py
+v2-automation/reports/fabric_health_report.json
+v2-automation/reports/*running_config*.txt

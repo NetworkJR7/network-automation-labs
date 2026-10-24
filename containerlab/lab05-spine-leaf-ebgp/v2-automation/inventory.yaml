@@ -1,0 +1,18 @@
+transport: docker
+
+devices:
+  spine1:
+    container: clab-frr-spine-leaf-spine1
+    role: spine
+
+  spine2:
+    container: clab-frr-spine-leaf-spine2
+    role: spine
+
+  leaf1:
+    container: clab-frr-spine-leaf-leaf1
+    role: leaf
+
+  leaf2:
+    container: clab-frr-spine-leaf-leaf2
+    role: leaf

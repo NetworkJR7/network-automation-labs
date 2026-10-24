@@ -1,0 +1,42 @@
+name: frr-spine-leaf
+
+topology:
+  nodes:
+
+    spine1:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - spine1/daemons:/etc/frr/daemons
+        - spine1/frr.conf:/etc/frr/frr.conf
+        - spine1/vtysh.conf:/etc/frr/vtysh.conf
+
+    spine2:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - spine2/daemons:/etc/frr/daemons
+        - spine2/frr.conf:/etc/frr/frr.conf
+        - spine2/vtysh.conf:/etc/frr/vtysh.conf
+
+    leaf1:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - leaf1/daemons:/etc/frr/daemons
+        - leaf1/frr.conf:/etc/frr/frr.conf
+        - leaf1/vtysh.conf:/etc/frr/vtysh.conf
+
+    leaf2:
+      kind: linux
+      image: frrouting/frr:latest
+      binds:
+        - leaf2/daemons:/etc/frr/daemons
+        - leaf2/frr.conf:/etc/frr/frr.conf
+        - leaf2/vtysh.conf:/etc/frr/vtysh.conf
+
+  links:
+    - endpoints: ["spine1:eth1", "leaf1:eth1"]
+    - endpoints: ["spine1:eth2", "leaf2:eth1"]
+    - endpoints: ["spine2:eth1", "leaf1:eth2"]
+    - endpoints: ["spine2:eth2", "leaf2:eth2"]

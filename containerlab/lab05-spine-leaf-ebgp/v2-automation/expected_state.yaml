@@ -1,0 +1,80 @@
+fabric:
+  name: frr-spine-leaf
+  expected_nodes: 4
+
+devices:
+  spine1:
+    local_as: 65000
+    interfaces:
+      eth1:
+        address: 10.0.11.0/31
+      eth2:
+        address: 10.0.12.0/31
+    loopback: 1.1.1.1/32
+    neighbors:
+      10.0.11.1: 65101
+      10.0.12.1: 65102
+    routes:
+      10.0.0.1/32:
+        protocol: bgp
+        nexthops: 1
+      10.0.0.2/32:
+        protocol: bgp
+        nexthops: 1
+
+  spine2:
+    local_as: 65000
+    interfaces:
+      eth1:
+        address: 10.0.21.0/31
+      eth2:
+        address: 10.0.22.0/31
+    loopback: 2.2.2.2/32
+    neighbors:
+      10.0.21.1: 65101
+      10.0.22.1: 65102
+    routes:
+      10.0.0.1/32:
+        protocol: bgp
+        nexthops: 1
+      10.0.0.2/32:
+        protocol: bgp
+        nexthops: 1
+
+  leaf1:
+    local_as: 65101
+    interfaces:
+      eth1:
+        address: 10.0.11.1/31
+      eth2:
+        address: 10.0.21.1/31
+    loopback: 10.0.0.1/32
+    neighbors:
+      10.0.11.0: 65000
+      10.0.21.0: 65000
+    routes:
+      10.0.0.2/32:
+        protocol: bgp
+        nexthops: 2
+        via:
+          - 10.0.11.0
+          - 10.0.21.0
+
+  leaf2:
+    local_as: 65102
+    interfaces:
+      eth1:
+        address: 10.0.12.1/31
+      eth2:
+        address: 10.0.22.1/31
+    loopback: 10.0.0.2/32
+    neighbors:
+      10.0.12.0: 65000
+      10.0.22.0: 65000
+    routes:
+      10.0.0.1/32:
+        protocol: bgp
+        nexthops: 2
+        via:
+          - 10.0.12.0
+          - 10.0.22.0

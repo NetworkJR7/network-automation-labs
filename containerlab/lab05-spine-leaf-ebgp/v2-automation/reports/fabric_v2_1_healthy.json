@@ -1,0 +1,525 @@
+{
+  "timestamp": "2026-10-24T14:54:48.318825+00:00",
+  "fabric": "frr-spine-leaf",
+  "status": "HEALTHY",
+  "nodes": [
+    {
+      "node": "spine1",
+      "checks": [
+        {
+          "name": "local_as",
+          "passed": true,
+          "observed": 65000
+        },
+        {
+          "name": "neighbor:10.0.11.1:established",
+          "passed": true,
+          "observed": "1"
+        },
+        {
+          "name": "neighbor:10.0.11.1:remote_as",
+          "passed": true,
+          "observed": 65101
+        },
+        {
+          "name": "neighbor:10.0.12.1:established",
+          "passed": true,
+          "observed": "1"
+        },
+        {
+          "name": "neighbor:10.0.12.1:remote_as",
+          "passed": true,
+          "observed": 65102
+        },
+        {
+          "name": "neighbor_configured_count",
+          "passed": true,
+          "observed": "2/2"
+        },
+        {
+          "name": "neighbor_established_count",
+          "passed": true,
+          "observed": "2/2"
+        },
+        {
+          "name": "interface:eth1",
+          "passed": true,
+          "observed": {
+            "admin_up": true,
+            "oper_up": true,
+            "addresses": [
+              "10.0.11.0/31"
+            ],
+            "expected_address": "10.0.11.0/31"
+          }
+        },
+        {
+          "name": "interface:eth2",
+          "passed": true,
+          "observed": {
+            "admin_up": true,
+            "oper_up": true,
+            "addresses": [
+              "10.0.12.0/31"
+            ],
+            "expected_address": "10.0.12.0/31"
+          }
+        },
+        {
+          "name": "loopback",
+          "passed": true,
+          "observed": [
+            "1.1.1.1/32",
+            "127.0.0.1/8"
+          ]
+        },
+        {
+          "name": "bgp:10.0.0.1/32",
+          "passed": true,
+          "observed": "PRESENT"
+        },
+        {
+          "name": "rib:10.0.0.1/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.11.1"
+            ],
+            "expected": 1
+          }
+        },
+        {
+          "name": "fib:10.0.0.1/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.11.1"
+            ],
+            "expected": 1
+          }
+        },
+        {
+          "name": "rib_kernel_consistency:10.0.0.1/32",
+          "passed": true,
+          "observed": {
+            "rib_only": [],
+            "kernel_only": [],
+            "rib_protocol": "bgp",
+            "kernel_protocol": "bgp"
+          }
+        },
+        {
+          "name": "bgp:10.0.0.2/32",
+          "passed": true,
+          "observed": "PRESENT"
+        },
+        {
+          "name": "rib:10.0.0.2/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.12.1"
+            ],
+            "expected": 1
+          }
+        },
+        {
+          "name": "fib:10.0.0.2/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.12.1"
+            ],
+            "expected": 1
+          }
+        },
+        {
+          "name": "rib_kernel_consistency:10.0.0.2/32",
+          "passed": true,
+          "observed": {
+            "rib_only": [],
+            "kernel_only": [],
+            "rib_protocol": "bgp",
+            "kernel_protocol": "bgp"
+          }
+        }
+      ],
+      "status": "HEALTHY"
+    },
+    {
+      "node": "spine2",
+      "checks": [
+        {
+          "name": "local_as",
+          "passed": true,
+          "observed": 65000
+        },
+        {
+          "name": "neighbor:10.0.21.1:established",
+          "passed": true,
+          "observed": "1"
+        },
+        {
+          "name": "neighbor:10.0.21.1:remote_as",
+          "passed": true,
+          "observed": 65101
+        },
+        {
+          "name": "neighbor:10.0.22.1:established",
+          "passed": true,
+          "observed": "1"
+        },
+        {
+          "name": "neighbor:10.0.22.1:remote_as",
+          "passed": true,
+          "observed": 65102
+        },
+        {
+          "name": "neighbor_configured_count",
+          "passed": true,
+          "observed": "2/2"
+        },
+        {
+          "name": "neighbor_established_count",
+          "passed": true,
+          "observed": "2/2"
+        },
+        {
+          "name": "interface:eth1",
+          "passed": true,
+          "observed": {
+            "admin_up": true,
+            "oper_up": true,
+            "addresses": [
+              "10.0.21.0/31"
+            ],
+            "expected_address": "10.0.21.0/31"
+          }
+        },
+        {
+          "name": "interface:eth2",
+          "passed": true,
+          "observed": {
+            "admin_up": true,
+            "oper_up": true,
+            "addresses": [
+              "10.0.22.0/31"
+            ],
+            "expected_address": "10.0.22.0/31"
+          }
+        },
+        {
+          "name": "loopback",
+          "passed": true,
+          "observed": [
+            "127.0.0.1/8",
+            "2.2.2.2/32"
+          ]
+        },
+        {
+          "name": "bgp:10.0.0.1/32",
+          "passed": true,
+          "observed": "PRESENT"
+        },
+        {
+          "name": "rib:10.0.0.1/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.21.1"
+            ],
+            "expected": 1
+          }
+        },
+        {
+          "name": "fib:10.0.0.1/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.21.1"
+            ],
+            "expected": 1
+          }
+        },
+        {
+          "name": "rib_kernel_consistency:10.0.0.1/32",
+          "passed": true,
+          "observed": {
+            "rib_only": [],
+            "kernel_only": [],
+            "rib_protocol": "bgp",
+            "kernel_protocol": "bgp"
+          }
+        },
+        {
+          "name": "bgp:10.0.0.2/32",
+          "passed": true,
+          "observed": "PRESENT"
+        },
+        {
+          "name": "rib:10.0.0.2/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.22.1"
+            ],
+            "expected": 1
+          }
+        },
+        {
+          "name": "fib:10.0.0.2/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.22.1"
+            ],
+            "expected": 1
+          }
+        },
+        {
+          "name": "rib_kernel_consistency:10.0.0.2/32",
+          "passed": true,
+          "observed": {
+            "rib_only": [],
+            "kernel_only": [],
+            "rib_protocol": "bgp",
+            "kernel_protocol": "bgp"
+          }
+        }
+      ],
+      "status": "HEALTHY"
+    },
+    {
+      "node": "leaf1",
+      "checks": [
+        {
+          "name": "local_as",
+          "passed": true,
+          "observed": 65101
+        },
+        {
+          "name": "neighbor:10.0.11.0:established",
+          "passed": true,
+          "observed": "2"
+        },
+        {
+          "name": "neighbor:10.0.11.0:remote_as",
+          "passed": true,
+          "observed": 65000
+        },
+        {
+          "name": "neighbor:10.0.21.0:established",
+          "passed": true,
+          "observed": "2"
+        },
+        {
+          "name": "neighbor:10.0.21.0:remote_as",
+          "passed": true,
+          "observed": 65000
+        },
+        {
+          "name": "neighbor_configured_count",
+          "passed": true,
+          "observed": "2/2"
+        },
+        {
+          "name": "neighbor_established_count",
+          "passed": true,
+          "observed": "2/2"
+        },
+        {
+          "name": "interface:eth1",
+          "passed": true,
+          "observed": {
+            "admin_up": true,
+            "oper_up": true,
+            "addresses": [
+              "10.0.11.1/31"
+            ],
+            "expected_address": "10.0.11.1/31"
+          }
+        },
+        {
+          "name": "interface:eth2",
+          "passed": true,
+          "observed": {
+            "admin_up": true,
+            "oper_up": true,
+            "addresses": [
+              "10.0.21.1/31"
+            ],
+            "expected_address": "10.0.21.1/31"
+          }
+        },
+        {
+          "name": "loopback",
+          "passed": true,
+          "observed": [
+            "10.0.0.1/32",
+            "127.0.0.1/8"
+          ]
+        },
+        {
+          "name": "bgp:10.0.0.2/32",
+          "passed": true,
+          "observed": "PRESENT"
+        },
+        {
+          "name": "rib:10.0.0.2/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.11.0",
+              "10.0.21.0"
+            ],
+            "expected": 2
+          }
+        },
+        {
+          "name": "fib:10.0.0.2/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.21.0",
+              "10.0.11.0"
+            ],
+            "expected": 2
+          }
+        },
+        {
+          "name": "rib_kernel_consistency:10.0.0.2/32",
+          "passed": true,
+          "observed": {
+            "rib_only": [],
+            "kernel_only": [],
+            "rib_protocol": "bgp",
+            "kernel_protocol": "bgp"
+          }
+        }
+      ],
+      "status": "HEALTHY"
+    },
+    {
+      "node": "leaf2",
+      "checks": [
+        {
+          "name": "local_as",
+          "passed": true,
+          "observed": 65102
+        },
+        {
+          "name": "neighbor:10.0.12.0:established",
+          "passed": true,
+          "observed": "2"
+        },
+        {
+          "name": "neighbor:10.0.12.0:remote_as",
+          "passed": true,
+          "observed": 65000
+        },
+        {
+          "name": "neighbor:10.0.22.0:established",
+          "passed": true,
+          "observed": "2"
+        },
+        {
+          "name": "neighbor:10.0.22.0:remote_as",
+          "passed": true,
+          "observed": 65000
+        },
+        {
+          "name": "neighbor_configured_count",
+          "passed": true,
+          "observed": "2/2"
+        },
+        {
+          "name": "neighbor_established_count",
+          "passed": true,
+          "observed": "2/2"
+        },
+        {
+          "name": "interface:eth1",
+          "passed": true,
+          "observed": {
+            "admin_up": true,
+            "oper_up": true,
+            "addresses": [
+              "10.0.12.1/31"
+            ],
+            "expected_address": "10.0.12.1/31"
+          }
+        },
+        {
+          "name": "interface:eth2",
+          "passed": true,
+          "observed": {
+            "admin_up": true,
+            "oper_up": true,
+            "addresses": [
+              "10.0.22.1/31"
+            ],
+            "expected_address": "10.0.22.1/31"
+          }
+        },
+        {
+          "name": "loopback",
+          "passed": true,
+          "observed": [
+            "10.0.0.2/32",
+            "127.0.0.1/8"
+          ]
+        },
+        {
+          "name": "bgp:10.0.0.1/32",
+          "passed": true,
+          "observed": "PRESENT"
+        },
+        {
+          "name": "rib:10.0.0.1/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.12.0",
+              "10.0.22.0"
+            ],
+            "expected": 2
+          }
+        },
+        {
+          "name": "fib:10.0.0.1/32",
+          "passed": true,
+          "observed": {
+            "protocol": "bgp",
+            "nexthops": [
+              "10.0.22.0",
+              "10.0.12.0"
+            ],
+            "expected": 2
+          }
+        },
+        {
+          "name": "rib_kernel_consistency:10.0.0.1/32",
+          "passed": true,
+          "observed": {
+            "rib_only": [],
+            "kernel_only": [],
+            "rib_protocol": "bgp",
+            "kernel_protocol": "bgp"
+          }
+        }
+      ],
+      "status": "HEALTHY"
+    }
+  ]
+}
