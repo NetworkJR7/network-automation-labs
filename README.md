@@ -29,6 +29,7 @@ Interested mainly in automation? Start with [Lab 01 v2](containerlab/lab01-ospf/
 | Lab 02 | eBGP | [Topology and FRR configuration](containerlab/lab02-ebgp/) | [eBGP automated validation](containerlab/lab02-ebgp/v2-automation/README.md) |
 | Lab 03 | iBGP Route Reflector | [Topology and FRR configuration](containerlab/lab03-ibgp-rr/) | [Route Reflector automated validation](containerlab/lab03-ibgp-rr/v2-automation/README.md) |
 | Lab 04 | BGP Policy | [Topology and FRR configuration](containerlab/lab04-bgp-policy/) | [BGP policy and intent validation](containerlab/lab04-bgp-policy/v2-automation/README.md) |
+| Lab 05 | Spine-Leaf eBGP + ECMP | [Spine-Leaf topology and FRR configuration](containerlab/lab05-spine-leaf-ebgp/README.md) | [Automated fabric validation](containerlab/lab05-spine-leaf-ebgp/v2-automation/README.md) |
 
 Additional foundations:
 
@@ -156,6 +157,25 @@ This is the first lab in the series to frame network health explicitly as **inte
 
 **Explore:** [Manual Lab](containerlab/lab04-bgp-policy/) · [Automated v2](containerlab/lab04-bgp-policy/v2-automation/README.md)
 
+### Lab 05 — Spine-Leaf eBGP Fabric with ECMP
+
+A four-node datacenter underlay fabric built with FRRouting, Docker, and Containerlab.
+
+The topology consists of two Spines (AS 65000) and two Leafs (AS 65101 and AS 65102), providing redundant Layer 3 connectivity through eBGP and two-way ECMP.
+
+The automated version validates:
+
+- eBGP neighbor establishment and remote ASNs
+- Interface operational state and IPv4 addressing
+- Loopback advertisements and expected BGP prefixes
+- FRRouting RIB and Linux kernel routing tables
+- ECMP nexthop count and RIB-to-kernel consistency
+- Fabric-wide health status and JSON reporting
+
+**Troubleshooting highlight:** Fault injection revealed an ECMP inconsistency between FRRouting and the Linux kernel. The Python validator was enhanced to detect this condition automatically.
+
+**Explore:** [Manual Lab](containerlab/lab05-spine-leaf-ebgp/README.md) · [Automated v2](containerlab/lab05-spine-leaf-ebgp/v2-automation/README.md)
+
 ## Repository Structure
 
 ```text
@@ -202,18 +222,33 @@ network-automation-labs/
 │   │       ├── images/
 │   │       └── reports/
 │   │
-│   └── lab04-bgp-policy/
+│   ├── lab04-bgp-policy/
+│   │   ├── topology.clab.yml
+│   │   ├── r1/
+│   │   ├── r2/
+│   │   ├── r3/
+│   │   └── v2-automation/
+│   │       ├── README.md
+│   │       ├── inventory.yaml
+│   │       ├── policy_health_check.py
+│   │       ├── images/
+│   │       └── reports/
+│   │
+│   └── lab05-spine-leaf-ebgp/
+│       ├── README.md
 │       ├── topology.clab.yml
-│       ├── r1/
-│       ├── r2/
-│       ├── r3/
+│       ├── images/
+│       │   └── lab05-spine-leaf-ebgp.png
+│       ├── spine1/
+│       ├── spine2/
+│       ├── leaf1/
+│       ├── leaf2/
 │       └── v2-automation/
 │           ├── README.md
 │           ├── inventory.yaml
-│           ├── policy_health_check.py
-│           ├── images/
+│           ├── expected_state.yaml
+│           ├── fabric_health_check.py
 │           └── reports/
-│
 ├── frr/
 │   └── lab01-ospf/
 │       ├── docker-compose.yml
@@ -300,18 +335,16 @@ show running-config
 
 ### Planned for Future Stages
 
-- Multi-device inventory and expected-state models
 - Configuration generation and reusable templates
 - Ansible and Jinja2 workflows
 - Pre-change and post-change validation
-- Spine–Leaf underlay design
 - VXLAN data plane and VTEP validation
 - BGP EVPN control plane
-- Fabric-wide health checks and automation
-
+- Reusable multi-device validation across different topologies
+- Extended fabric-wide health checks for VXLAN/EVPN
 ## Roadmap
 
-Labs 01–04 and their automated v2 validation workflows are the current completed progression in this repository. The next stages are intentionally listed as roadmap items, not as completed implementations.
+Labs 01–05 and their automated v2 validation workflows are the current completed progression in this repository. The next stages are intentionally listed as roadmap items, not as completed implementations.
 
 ### Next — Scale the Validation Model
 
@@ -321,12 +354,12 @@ Labs 01–04 and their automated v2 validation workflows are the current complet
 - Improve parsing, exception handling, and failure summaries
 - Add repeatable pre-change and post-change checks
 
-### Then — Spine–Leaf Underlay
+### Completed — Spine–Leaf eBGP Underlay
 
-- Build a small multi-device Spine–Leaf topology
-- Validate point-to-point addressing and eBGP underlay sessions
-- Check loopback advertisement and end-to-end underlay reachability
-- Extend expected-state validation from individual labs to a fabric view
+- Four-node Spine-Leaf architecture using FRRouting and Containerlab
+- eBGP underlay with two-way ECMP
+- Automated interface, BGP, RIB, and kernel validation
+- Fault-injection and recovery evidence
 
 ### Next — VXLAN and BGP EVPN
 
@@ -344,8 +377,8 @@ Labs 01–04 and their automated v2 validation workflows are the current complet
 - Produce a consolidated fabric health report
 
 ```text
-Current: OSPF → eBGP → iBGP RR → BGP Policy → Automated Validation
-Next:    Multi-device Expected State → Spine–Leaf → VXLAN → EVPN → Fabric Automation
+Completed: OSPF → eBGP → iBGP RR → BGP Policy → Spine-Leaf eBGP + ECMP
+Next:      VXLAN → BGP EVPN → Fabric Automation
 ```
 
 ## GitHub and Portfolio
