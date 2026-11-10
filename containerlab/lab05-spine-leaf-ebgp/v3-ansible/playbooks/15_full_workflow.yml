@@ -1,0 +1,152 @@
+---
+- name: Lab 05 v3.17 - Safe Change Workflow
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    lab_root: "{{ playbook_dir }}/../.."
+    inventory_file: "{{ playbook_dir }}/../inventory/hosts.yml"
+    backup_root: "{{ playbook_dir }}/../backups/changes"
+    apply_change: false
+    target_neighbor: "10.0.11.0"
+
+  tasks:
+
+    - name: Initialize workflow
+      ansible.builtin.set_fact:
+        workflow_status: "NOT_STARTED"
+        change_id: "CHG-{{ now(utc=true, fmt='%Y%m%d-%H%M%S-%f') }}"
+
+    - name: Execute safe preflight
+      block:
+
+        - name: Validate BGP
+          ansible.builtin.command:
+            argv:
+              - ansible-playbook
+              - -i
+              - "{{ inventory_file }}"
+              - "{{ playbook_dir }}/02_validate_bgp.yml"
+          register: bgp_check
+          changed_when: false
+
+        - name: Validate fabric RIB FIB and ECMP
+          ansible.builtin.command:
+            argv:
+              - python3
+              - v2-automation/fabric_health_check.py
+            chdir: "{{ lab_root }}"
+          register: fabric_check
+          changed_when: false
+          failed_when: >-
+            fabric_check.rc != 0 or
+            'FABRIC STATUS: HEALTHY' not in fabric_check.stdout
+
+        - name: Collect running configurations
+          ansible.builtin.command:
+            argv:
+              - docker
+              - exec
+              - "{{ hostvars[item].container_name }}"
+              - vtysh
+              - -c
+              - show running-config
+          loop: "{{ groups['all'] }}"
+          register: running_configs
+          changed_when: false
+
+        - name: Validate backup content
+          ansible.builtin.assert:
+            that:
+              - item.rc == 0
+              - item.stdout | length > 100
+              - "'router bgp ' in item.stdout"
+            fail_msg: "INVALID CONFIGURATION: {{ item.item }}"
+          loop: "{{ running_configs.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+
+        - name: Capture original Leaf1 description
+          ansible.builtin.set_fact:
+            original_description_lines: >-
+              {{
+                (
+                  running_configs.results
+                  | selectattr('item', 'equalto', 'leaf1')
+                  | first
+                ).stdout_lines
+                | map('trim')
+                | select(
+                    'match',
+                    '^neighbor ' ~ target_neighbor ~ ' description(?: |$)'
+                  )
+                | list
+              }}
+
+        - name: Validate captured description
+          ansible.builtin.assert:
+            that:
+              - original_description_lines | length <= 1
+
+        - name: Save original description
+          ansible.builtin.set_fact:
+            previous_description: >-
+              {{
+                original_description_lines[0]
+                | regex_replace(
+                    '^neighbor ' ~ target_neighbor ~ ' description ?',
+                    ''
+                  )
+                if original_description_lines | length > 0
+                else ''
+              }}
+
+        - name: Create versioned backup directory
+          ansible.builtin.file:
+            path: "{{ backup_root }}/{{ change_id }}"
+            state: directory
+            mode: "0700"
+
+        - name: Save all configuration backups
+          ansible.builtin.copy:
+            content: "{{ item.stdout ~ '\n' }}"
+            dest: "{{ backup_root }}/{{ change_id }}/{{ item.item }}.conf"
+            mode: "0600"
+            force: false
+          loop: "{{ running_configs.results }}"
+          loop_control:
+            label: "{{ item.item }}"
+
+        - name: Store original description with change
+          ansible.builtin.copy:
+            content: "{{ {'neighbor': target_neighbor, 'previous_description': previous_description} | to_nice_yaml }}"
+            dest: "{{ backup_root }}/{{ change_id }}/change_state.yml"
+            mode: "0600"
+            force: false
+
+        - name: Confirm preparation
+          ansible.builtin.set_fact:
+            workflow_status: "READY"
+
+      rescue:
+
+        - name: Record preflight failure
+          ansible.builtin.set_fact:
+            workflow_status: "PRECHECK_FAILED"
+
+      always:
+
+        - name: Display change information
+          ansible.builtin.debug:
+            msg:
+              - "CHANGE ID: {{ change_id }}"
+              - "WORKFLOW STATUS: {{ workflow_status }}"
+              - "APPLY CHANGE: {{ apply_change }}"
+              - "BACKUP DIR: {{ backup_root }}/{{ change_id }}"
+
+    - name: Enforce successful preparation
+      ansible.builtin.assert:
+        that:
+          - workflow_status == "READY"
+        success_msg: "CHANGE PREPARATION SUCCESSFUL"
+        fail_msg: "CHANGE PREPARATION FAILED"

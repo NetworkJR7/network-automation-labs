@@ -1,0 +1,144 @@
+
+PLAY [Lab 05 v3 - Validate eBGP Health] ****************************************
+
+TASK [Collect BGP summary as JSON] *********************************************
+ok: [spine2]
+ok: [leaf2]
+ok: [spine1]
+ok: [leaf1]
+
+TASK [Parse BGP JSON] **********************************************************
+ok: [spine1]
+ok: [spine2]
+ok: [leaf1]
+ok: [leaf2]
+
+TASK [Validate local ASN] ******************************************************
+ok: [spine1] => {
+    "changed": false,
+    "msg": "spine1: Local ASN verified"
+}
+ok: [spine2] => {
+    "changed": false,
+    "msg": "spine2: Local ASN verified"
+}
+ok: [leaf1] => {
+    "changed": false,
+    "msg": "leaf1: Local ASN verified"
+}
+ok: [leaf2] => {
+    "changed": false,
+    "msg": "leaf2: Local ASN verified"
+}
+
+TASK [Validate expected neighbor count] ****************************************
+ok: [spine1] => {
+    "changed": false,
+    "msg": "spine1: Neighbor inventory verified"
+}
+ok: [leaf1] => {
+    "changed": false,
+    "msg": "leaf1: Neighbor inventory verified"
+}
+ok: [spine2] => {
+    "changed": false,
+    "msg": "spine2: Neighbor inventory verified"
+}
+ok: [leaf2] => {
+    "changed": false,
+    "msg": "leaf2: Neighbor inventory verified"
+}
+
+TASK [Validate every BGP neighbor] *********************************************
+ok: [spine1] => (item=10.0.11.1) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "key": "10.0.11.1",
+        "value": 65101
+    },
+    "msg": "spine1: Neighbor 10.0.11.1 HEALTHY"
+}
+ok: [spine2] => (item=10.0.21.1) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "key": "10.0.21.1",
+        "value": 65101
+    },
+    "msg": "spine2: Neighbor 10.0.21.1 HEALTHY"
+}
+ok: [spine1] => (item=10.0.12.1) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "key": "10.0.12.1",
+        "value": 65102
+    },
+    "msg": "spine1: Neighbor 10.0.12.1 HEALTHY"
+}
+ok: [leaf2] => (item=10.0.12.0) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "key": "10.0.12.0",
+        "value": 65000
+    },
+    "msg": "leaf2: Neighbor 10.0.12.0 HEALTHY"
+}
+ok: [spine2] => (item=10.0.22.1) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "key": "10.0.22.1",
+        "value": 65102
+    },
+    "msg": "spine2: Neighbor 10.0.22.1 HEALTHY"
+}
+ok: [leaf1] => (item=10.0.11.0) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "key": "10.0.11.0",
+        "value": 65000
+    },
+    "msg": "leaf1: Neighbor 10.0.11.0 HEALTHY"
+}
+ok: [leaf2] => (item=10.0.22.0) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "key": "10.0.22.0",
+        "value": 65000
+    },
+    "msg": "leaf2: Neighbor 10.0.22.0 HEALTHY"
+}
+ok: [leaf1] => (item=10.0.21.0) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "key": "10.0.21.0",
+        "value": 65000
+    },
+    "msg": "leaf1: Neighbor 10.0.21.0 HEALTHY"
+}
+
+TASK [Display node health] *****************************************************
+ok: [spine1] => {
+    "msg": "SPINE1: BGP HEALTHY"
+}
+ok: [leaf1] => {
+    "msg": "LEAF1: BGP HEALTHY"
+}
+ok: [spine2] => {
+    "msg": "SPINE2: BGP HEALTHY"
+}
+ok: [leaf2] => {
+    "msg": "LEAF2: BGP HEALTHY"
+}
+
+PLAY RECAP *********************************************************************
+leaf1                      : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+leaf2                      : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+spine1                     : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0
+spine2                     : ok=6    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0

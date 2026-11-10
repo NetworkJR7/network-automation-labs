@@ -1,0 +1,28 @@
+---
+- name: Lab 05 v3 - BGP Operational Checks
+  hosts: all
+  connection: local
+  gather_facts: false
+
+  tasks:
+
+    - name: Check BGP IPv4 unicast summary
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ container_name }}"
+          - vtysh
+          - -c
+          - show bgp ipv4 unicast summary
+      register: bgp_result
+      changed_when: false
+
+    - name: Display BGP summary
+      ansible.builtin.debug:
+        msg: |
+          ==============================
+          DEVICE: {{ inventory_hostname }}
+          CONTAINER: {{ container_name }}
+          ==============================
+          {{ bgp_result.stdout }}

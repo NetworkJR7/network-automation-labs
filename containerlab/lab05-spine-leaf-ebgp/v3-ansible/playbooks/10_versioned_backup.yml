@@ -1,0 +1,61 @@
+---
+- name: Lab 05 v3.12 - Versioned Configuration Backup
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    backup_root: "{{ playbook_dir }}/../backups/changes"
+
+  tasks:
+
+    - name: Generate unique change ID
+      ansible.builtin.set_fact:
+        change_id: "CHG-{{ now(utc=true, fmt='%Y%m%d-%H%M%S-%f') }}"
+
+    - name: Create change backup directory
+      ansible.builtin.file:
+        path: "{{ backup_root }}/{{ change_id }}"
+        state: directory
+        mode: "0700"
+
+    - name: Collect FRRouting running configurations
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ hostvars[item].container_name }}"
+          - vtysh
+          - -c
+          - show running-config
+      loop: "{{ groups['all'] }}"
+      register: running_configs
+      changed_when: false
+
+    - name: Validate collected configurations
+      ansible.builtin.assert:
+        that:
+          - item.rc == 0
+          - item.stdout | length > 100
+          - "'router bgp ' in item.stdout"
+        fail_msg: "INVALID BACKUP: {{ item.item }}"
+        success_msg: "BACKUP CONTENT VERIFIED: {{ item.item }}"
+      loop: "{{ running_configs.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Save versioned configuration backups
+      ansible.builtin.copy:
+        content: "{{ item.stdout ~ '\n' }}"
+        dest: "{{ backup_root }}/{{ change_id }}/{{ item.item }}.conf"
+        mode: "0600"
+        force: false
+      loop: "{{ running_configs.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Display backup information
+      ansible.builtin.debug:
+        msg:
+          - "CHANGE ID: {{ change_id }}"
+          - "BACKUP DIRECTORY: {{ backup_root }}/{{ change_id }}"
+          - "BACKUP STATUS: SUCCESS"

@@ -1,0 +1,104 @@
+---
+- name: Lab 05 v3.13 - Automated Change and Post-check
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    lab_root: "{{ playbook_dir }}/../.."
+    inventory_file: "{{ playbook_dir }}/../inventory/hosts.yml"
+    apply_change: false
+
+  tasks:
+
+    - name: Initialize workflow
+      ansible.builtin.set_fact:
+        workflow_status: "NOT_STARTED"
+
+    - name: Execute change workflow
+      block:
+
+        - name: Run BGP pre-check
+          ansible.builtin.command:
+            argv:
+              - ansible-playbook
+              - -i
+              - "{{ inventory_file }}"
+              - "{{ playbook_dir }}/02_validate_bgp.yml"
+          changed_when: false
+
+        - name: Run fabric pre-check
+          ansible.builtin.command:
+            argv:
+              - python3
+              - v2-automation/fabric_health_check.py
+            chdir: "{{ lab_root }}"
+          register: precheck
+          changed_when: false
+          failed_when: >-
+            precheck.rc != 0 or
+            'FABRIC STATUS: HEALTHY' not in precheck.stdout
+
+        - name: Confirm pre-check
+          ansible.builtin.debug:
+            msg: "PRE-CHECK PASSED"
+
+        - name: Apply controlled change
+          ansible.builtin.command:
+            argv:
+              - ansible-playbook
+              - -i
+              - "{{ inventory_file }}"
+              - "{{ playbook_dir }}/06_change_leaf1.yml"
+          register: change_result
+          when: apply_change | bool
+
+        - name: Display validation-only status
+          ansible.builtin.debug:
+            msg: "VALIDATION MODE: No changes applied"
+          when: not apply_change | bool
+
+        - name: Run BGP post-check
+          ansible.builtin.command:
+            argv:
+              - ansible-playbook
+              - -i
+              - "{{ inventory_file }}"
+              - "{{ playbook_dir }}/02_validate_bgp.yml"
+          changed_when: false
+
+        - name: Run fabric post-check
+          ansible.builtin.command:
+            argv:
+              - python3
+              - v2-automation/fabric_health_check.py
+            chdir: "{{ lab_root }}"
+          register: postcheck
+          changed_when: false
+          failed_when: >-
+            postcheck.rc != 0 or
+            'FABRIC STATUS: HEALTHY' not in postcheck.stdout
+
+        - name: Mark workflow successful
+          ansible.builtin.set_fact:
+            workflow_status: >-
+              {{ 'CHANGE_VALIDATED' if apply_change | bool
+                 else 'VALIDATION_ONLY_PASSED' }}
+
+      rescue:
+
+        - name: Record workflow failure
+          ansible.builtin.set_fact:
+            workflow_status: "FAILED"
+
+      always:
+
+        - name: Display workflow status
+          ansible.builtin.debug:
+            msg: "WORKFLOW STATUS: {{ workflow_status }}"
+
+    - name: Enforce successful workflow
+      ansible.builtin.assert:
+        that:
+          - workflow_status != "FAILED"
+        success_msg: "WORKFLOW COMPLETED"
+        fail_msg: "WORKFLOW FAILED"

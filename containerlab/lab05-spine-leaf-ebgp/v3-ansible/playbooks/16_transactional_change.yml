@@ -1,0 +1,248 @@
+---
+- name: Lab 05 v3.19 - Transactional BGP Change
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    lab_root: "{{ playbook_dir }}/../.."
+    inventory_file: "{{ playbook_dir }}/../inventory/hosts.yml"
+    backup_root: "{{ playbook_dir }}/../backups/changes"
+    target_container: "clab-frr-spine-leaf-leaf1"
+    bgp_neighbor: "10.0.11.0"
+    desired_description: "SPINE1-UPLINK"
+    apply_change: false
+
+  tasks:
+
+    - name: Initialize transaction
+      ansible.builtin.set_fact:
+        change_id: "CHG-{{ now(utc=true, fmt='%Y%m%d-%H%M%S-%f') }}"
+        workflow_status: "NOT_STARTED"
+        change_attempted: false
+        rollback_verified: false
+
+    - name: Execute transaction
+      block:
+
+        - name: BGP pre-check
+          ansible.builtin.command:
+            argv:
+              - ansible-playbook
+              - -i
+              - "{{ inventory_file }}"
+              - "{{ playbook_dir }}/02_validate_bgp.yml"
+          changed_when: false
+
+        - name: Fabric pre-check
+          ansible.builtin.command:
+            argv:
+              - python3
+              - v2-automation/fabric_health_check.py
+            chdir: "{{ lab_root }}"
+          register: precheck
+          changed_when: false
+          failed_when: >-
+            precheck.rc != 0 or
+            'FABRIC STATUS: HEALTHY' not in precheck.stdout
+
+        - name: Capture Leaf1 configuration
+          ansible.builtin.command:
+            argv:
+              - docker
+              - exec
+              - "{{ target_container }}"
+              - vtysh
+              - -c
+              - show running-config
+          register: original_config
+          changed_when: false
+
+        - name: Capture previous description
+          ansible.builtin.set_fact:
+            original_lines: >-
+              {{
+                original_config.stdout_lines
+                | map('trim')
+                | select(
+                    'match',
+                    '^neighbor ' ~ bgp_neighbor ~ ' description(?: |$)'
+                  )
+                | list
+              }}
+
+        - name: Validate original state
+          ansible.builtin.assert:
+            that:
+              - original_config.stdout | length > 100
+              - "'router bgp 65101' in original_config.stdout"
+              - original_lines | length == 0
+            fail_msg: "ABORT: Leaf1 baseline differs from expected state"
+
+        - name: Create transaction directory
+          ansible.builtin.file:
+            path: "{{ backup_root }}/{{ change_id }}"
+            state: directory
+            mode: "0700"
+
+        - name: Save original configuration
+          ansible.builtin.copy:
+            content: "{{ original_config.stdout ~ '\n' }}"
+            dest: "{{ backup_root }}/{{ change_id }}/leaf1.conf"
+            mode: "0600"
+            force: false
+
+        - name: Confirm transaction prepared
+          ansible.builtin.debug:
+            msg: "BACKUP READY: {{ change_id }}"
+
+        - name: Apply BGP change
+          when: apply_change | bool
+          block:
+
+            - name: Mark change attempt
+              ansible.builtin.set_fact:
+                change_attempted: true
+
+            - name: Configure BGP description
+              ansible.builtin.command:
+                argv:
+                  - docker
+                  - exec
+                  - "{{ target_container }}"
+                  - vtysh
+                  - -c
+                  - configure terminal
+                  - -c
+                  - router bgp 65101
+                  - -c
+                  - "neighbor {{ bgp_neighbor }} description {{ desired_description }}"
+
+            - name: Verify configuration
+              ansible.builtin.command:
+                argv:
+                  - docker
+                  - exec
+                  - "{{ target_container }}"
+                  - vtysh
+                  - -c
+                  - show running-config
+              register: changed_config
+              changed_when: false
+
+            - name: Assert expected description
+              ansible.builtin.assert:
+                that:
+                  - >-
+                    ('neighbor ' ~ bgp_neighbor ~
+                    ' description ' ~ desired_description)
+                    in (changed_config.stdout_lines | map('trim') | list)
+
+            - name: BGP post-check
+              ansible.builtin.command:
+                argv:
+                  - ansible-playbook
+                  - -i
+                  - "{{ inventory_file }}"
+                  - "{{ playbook_dir }}/02_validate_bgp.yml"
+              changed_when: false
+
+            - name: Fabric post-check
+              ansible.builtin.command:
+                argv:
+                  - python3
+                  - v2-automation/fabric_health_check.py
+                chdir: "{{ lab_root }}"
+              register: postcheck
+              changed_when: false
+              failed_when: >-
+                postcheck.rc != 0 or
+                'FABRIC STATUS: HEALTHY' not in postcheck.stdout
+
+            - name: Simulate post-check failure
+              ansible.builtin.assert:
+                that:
+                  - not (simulate_postcheck_failure | default(false) | bool)
+                success_msg: "SIMULATED POST-CHECK: PASSED"
+                fail_msg: "SIMULATED POST-CHECK: FAILED - Triggering rollback"
+
+        - name: Set success status
+          ansible.builtin.set_fact:
+            workflow_status: >-
+              {{ 'SUCCESS' if apply_change | bool
+                 else 'VALIDATION_ONLY' }}
+
+      rescue:
+
+        - name: Record transaction failure
+          ansible.builtin.set_fact:
+            workflow_status: "FAILED"
+
+        - name: Roll back attempted change
+          when: change_attempted | bool
+          block:
+
+            - name: Remove BGP description
+              ansible.builtin.command:
+                argv:
+                  - docker
+                  - exec
+                  - "{{ target_container }}"
+                  - vtysh
+                  - -c
+                  - configure terminal
+                  - -c
+                  - router bgp 65101
+                  - -c
+                  - "no neighbor {{ bgp_neighbor }} description"
+
+            - name: Read restored configuration
+              ansible.builtin.command:
+                argv:
+                  - docker
+                  - exec
+                  - "{{ target_container }}"
+                  - vtysh
+                  - -c
+                  - show running-config
+              register: restored_config
+              changed_when: false
+
+            - name: Verify original configuration restored
+              ansible.builtin.assert:
+                that:
+                  - restored_config.stdout == original_config.stdout
+                fail_msg: "CRITICAL: Rollback configuration mismatch"
+
+            - name: Verify recovered fabric
+              ansible.builtin.command:
+                argv:
+                  - python3
+                  - v2-automation/fabric_health_check.py
+                chdir: "{{ lab_root }}"
+              register: recovery_check
+              changed_when: false
+              failed_when: >-
+                recovery_check.rc != 0 or
+                'FABRIC STATUS: HEALTHY' not in recovery_check.stdout
+
+            - name: Confirm rollback
+              ansible.builtin.set_fact:
+                rollback_verified: true
+                workflow_status: "ROLLED_BACK"
+
+      always:
+
+        - name: Display transaction summary
+          ansible.builtin.debug:
+            msg:
+              - "CHANGE ID: {{ change_id }}"
+              - "WORKFLOW STATUS: {{ workflow_status }}"
+              - "CHANGE ATTEMPTED: {{ change_attempted }}"
+              - "ROLLBACK VERIFIED: {{ rollback_verified }}"
+
+    - name: Enforce successful transaction
+      ansible.builtin.assert:
+        that:
+          - workflow_status in ['SUCCESS', 'VALIDATION_ONLY']
+        success_msg: "TRANSACTION COMPLETED"
+        fail_msg: "TRANSACTION FAILED: {{ workflow_status }}"

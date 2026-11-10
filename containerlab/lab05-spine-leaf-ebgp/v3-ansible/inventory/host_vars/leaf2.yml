@@ -1,0 +1,19 @@
+---
+device_hostname: leaf2
+
+bgp_as: 65102
+loopback_ip: 10.0.0.2
+
+bgp_neighbors:
+  - ip: 10.0.12.0
+    remote_as: 65000
+    description: SPINE1
+
+  - ip: 10.0.22.0
+    remote_as: 65000
+    description: SPINE2
+
+bgp_networks:
+  - 10.0.0.2/32
+
+bgp_maximum_paths: 2

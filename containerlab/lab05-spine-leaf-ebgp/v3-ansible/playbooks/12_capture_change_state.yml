@@ -1,0 +1,65 @@
+---
+- name: Lab 05 v3.14 - Capture Pre-change State
+  hosts: leaf1
+  connection: local
+  gather_facts: false
+
+  vars:
+    bgp_neighbor: "10.0.11.0"
+    desired_description: "SPINE1-UPLINK"
+
+  tasks:
+
+    - name: Read current FRRouting configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ container_name }}"
+          - vtysh
+          - -c
+          - show running-config
+      register: running_config
+      changed_when: false
+
+    - name: Extract current neighbor description
+      ansible.builtin.set_fact:
+        current_description_lines: >-
+          {{
+            running_config.stdout_lines
+            | map('trim')
+            | select(
+                'match',
+                '^neighbor ' ~ bgp_neighbor ~ ' description(?: |$)'
+              )
+            | list
+          }}
+
+    - name: Validate description inventory
+      ansible.builtin.assert:
+        that:
+          - current_description_lines | length <= 1
+        fail_msg: "Multiple description entries detected"
+        success_msg: "Neighbor description inventory verified"
+
+    - name: Capture pre-change state
+      ansible.builtin.set_fact:
+        previous_description: >-
+          {{
+            current_description_lines[0]
+            | regex_replace(
+                '^neighbor ' ~ bgp_neighbor ~ ' description ?',
+                ''
+              )
+            if current_description_lines | length > 0
+            else ''
+          }}
+
+    - name: Display pre-change state
+      ansible.builtin.debug:
+        msg:
+          - "DEVICE: {{ inventory_hostname }}"
+          - "NEIGHBOR: {{ bgp_neighbor }}"
+          - "PREVIOUS DESCRIPTION: {{ previous_description | default('') }}"
+          - "DESIRED DESCRIPTION: {{ desired_description }}"
+          - "CHANGE REQUIRED: {{ previous_description != desired_description }}"

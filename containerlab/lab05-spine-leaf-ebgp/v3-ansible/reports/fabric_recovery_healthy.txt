@@ -1,0 +1,81 @@
+
+=== SPINE-LEAF FABRIC HEALTH CHECK ===
+
+SPINE1
+  PASS  local_as: 65000
+  PASS  neighbor:10.0.11.1:established: 1
+  PASS  neighbor:10.0.11.1:remote_as: 65101
+  PASS  neighbor:10.0.12.1:established: 1
+  PASS  neighbor:10.0.12.1:remote_as: 65102
+  PASS  neighbor_configured_count: 2/2
+  PASS  neighbor_established_count: 2/2
+  PASS  interface:eth1: {'admin_up': True, 'oper_up': True, 'addresses': ['10.0.11.0/31'], 'expected_address': '10.0.11.0/31'}
+  PASS  interface:eth2: {'admin_up': True, 'oper_up': True, 'addresses': ['10.0.12.0/31'], 'expected_address': '10.0.12.0/31'}
+  PASS  loopback: ['1.1.1.1/32', '127.0.0.1/8']
+  PASS  bgp:10.0.0.1/32: PRESENT
+  PASS  rib:10.0.0.1/32: {'protocol': 'bgp', 'nexthops': ['10.0.11.1'], 'expected': 1}
+  PASS  fib:10.0.0.1/32: {'protocol': 'bgp', 'nexthops': ['10.0.11.1'], 'expected': 1}
+  PASS  rib_kernel_consistency:10.0.0.1/32: {'rib_only': [], 'kernel_only': [], 'rib_protocol': 'bgp', 'kernel_protocol': 'bgp'}
+  PASS  bgp:10.0.0.2/32: PRESENT
+  PASS  rib:10.0.0.2/32: {'protocol': 'bgp', 'nexthops': ['10.0.12.1'], 'expected': 1}
+  PASS  fib:10.0.0.2/32: {'protocol': 'bgp', 'nexthops': ['10.0.12.1'], 'expected': 1}
+  PASS  rib_kernel_consistency:10.0.0.2/32: {'rib_only': [], 'kernel_only': [], 'rib_protocol': 'bgp', 'kernel_protocol': 'bgp'}
+  NODE STATUS: HEALTHY
+
+SPINE2
+  PASS  local_as: 65000
+  PASS  neighbor:10.0.21.1:established: 1
+  PASS  neighbor:10.0.21.1:remote_as: 65101
+  PASS  neighbor:10.0.22.1:established: 1
+  PASS  neighbor:10.0.22.1:remote_as: 65102
+  PASS  neighbor_configured_count: 2/2
+  PASS  neighbor_established_count: 2/2
+  PASS  interface:eth1: {'admin_up': True, 'oper_up': True, 'addresses': ['10.0.21.0/31'], 'expected_address': '10.0.21.0/31'}
+  PASS  interface:eth2: {'admin_up': True, 'oper_up': True, 'addresses': ['10.0.22.0/31'], 'expected_address': '10.0.22.0/31'}
+  PASS  loopback: ['127.0.0.1/8', '2.2.2.2/32']
+  PASS  bgp:10.0.0.1/32: PRESENT
+  PASS  rib:10.0.0.1/32: {'protocol': 'bgp', 'nexthops': ['10.0.21.1'], 'expected': 1}
+  PASS  fib:10.0.0.1/32: {'protocol': 'bgp', 'nexthops': ['10.0.21.1'], 'expected': 1}
+  PASS  rib_kernel_consistency:10.0.0.1/32: {'rib_only': [], 'kernel_only': [], 'rib_protocol': 'bgp', 'kernel_protocol': 'bgp'}
+  PASS  bgp:10.0.0.2/32: PRESENT
+  PASS  rib:10.0.0.2/32: {'protocol': 'bgp', 'nexthops': ['10.0.22.1'], 'expected': 1}
+  PASS  fib:10.0.0.2/32: {'protocol': 'bgp', 'nexthops': ['10.0.22.1'], 'expected': 1}
+  PASS  rib_kernel_consistency:10.0.0.2/32: {'rib_only': [], 'kernel_only': [], 'rib_protocol': 'bgp', 'kernel_protocol': 'bgp'}
+  NODE STATUS: HEALTHY
+
+LEAF1
+  PASS  local_as: 65101
+  PASS  neighbor:10.0.11.0:established: 2
+  PASS  neighbor:10.0.11.0:remote_as: 65000
+  PASS  neighbor:10.0.21.0:established: 2
+  PASS  neighbor:10.0.21.0:remote_as: 65000
+  PASS  neighbor_configured_count: 2/2
+  PASS  neighbor_established_count: 2/2
+  PASS  interface:eth1: {'admin_up': True, 'oper_up': True, 'addresses': ['10.0.11.1/31'], 'expected_address': '10.0.11.1/31'}
+  PASS  interface:eth2: {'admin_up': True, 'oper_up': True, 'addresses': ['10.0.21.1/31'], 'expected_address': '10.0.21.1/31'}
+  PASS  loopback: ['10.0.0.1/32', '127.0.0.1/8']
+  PASS  bgp:10.0.0.2/32: PRESENT
+  PASS  rib:10.0.0.2/32: {'protocol': 'bgp', 'nexthops': ['10.0.11.0', '10.0.21.0'], 'expected': 2}
+  PASS  fib:10.0.0.2/32: {'protocol': 'bgp', 'nexthops': ['10.0.21.0', '10.0.11.0'], 'expected': 2}
+  PASS  rib_kernel_consistency:10.0.0.2/32: {'rib_only': [], 'kernel_only': [], 'rib_protocol': 'bgp', 'kernel_protocol': 'bgp'}
+  NODE STATUS: HEALTHY
+
+LEAF2
+  PASS  local_as: 65102
+  PASS  neighbor:10.0.12.0:established: 2
+  PASS  neighbor:10.0.12.0:remote_as: 65000
+  PASS  neighbor:10.0.22.0:established: 2
+  PASS  neighbor:10.0.22.0:remote_as: 65000
+  PASS  neighbor_configured_count: 2/2
+  PASS  neighbor_established_count: 2/2
+  PASS  interface:eth1: {'admin_up': True, 'oper_up': True, 'addresses': ['10.0.12.1/31'], 'expected_address': '10.0.12.1/31'}
+  PASS  interface:eth2: {'admin_up': True, 'oper_up': True, 'addresses': ['10.0.22.1/31'], 'expected_address': '10.0.22.1/31'}
+  PASS  loopback: ['10.0.0.2/32', '127.0.0.1/8']
+  PASS  bgp:10.0.0.1/32: PRESENT
+  PASS  rib:10.0.0.1/32: {'protocol': 'bgp', 'nexthops': ['10.0.12.0', '10.0.22.0'], 'expected': 2}
+  PASS  fib:10.0.0.1/32: {'protocol': 'bgp', 'nexthops': ['10.0.12.0', '10.0.22.0'], 'expected': 2}
+  PASS  rib_kernel_consistency:10.0.0.1/32: {'rib_only': [], 'kernel_only': [], 'rib_protocol': 'bgp', 'kernel_protocol': 'bgp'}
+  NODE STATUS: HEALTHY
+
+FABRIC STATUS: HEALTHY
+Report: /home/jaime7/network-automation-labs/containerlab/lab05-spine-leaf-ebgp/v2-automation/reports/fabric_health_report.json

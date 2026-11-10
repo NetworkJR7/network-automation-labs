@@ -1,0 +1,20 @@
+---
+- name: Lab 05 v3 - Generate FRRouting BGP Configuration
+  hosts: all
+  connection: local
+  gather_facts: false
+
+  tasks:
+
+    - name: Generate BGP configuration using Jinja2
+      ansible.builtin.template:
+        src: ../templates/frr_bgp.j2
+        dest: "{{ playbook_dir }}/../generated/{{ inventory_hostname }}_bgp.conf"
+        mode: "0644"
+      register: template_result
+
+    - name: Display template result
+      ansible.builtin.debug:
+        msg: >-
+          Device: {{ inventory_hostname }}
+          Configuration changed: {{ template_result.changed }}

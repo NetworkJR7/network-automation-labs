@@ -1,0 +1,66 @@
+---
+- name: Lab 05 v3.10 - Simulated Change Workflow
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    simulate_postcheck_failure: true
+
+  tasks:
+
+    - name: Initialize workflow status
+      ansible.builtin.set_fact:
+        workflow_status: "NOT_STARTED"
+        rollback_executed: false
+
+    - name: Execute controlled workflow
+      block:
+
+        - name: Simulate pre-check
+          ansible.builtin.debug:
+            msg: "PRE-CHECK PASSED"
+
+        - name: Simulate configuration backup
+          ansible.builtin.debug:
+            msg: "BACKUP COMPLETED"
+
+        - name: Simulate configuration change
+          ansible.builtin.debug:
+            msg: "CHANGE APPLIED"
+
+        - name: Simulate post-check
+          ansible.builtin.assert:
+            that:
+              - not simulate_postcheck_failure | bool
+            success_msg: "POST-CHECK PASSED"
+            fail_msg: "POST-CHECK FAILED"
+
+        - name: Mark successful deployment
+          ansible.builtin.set_fact:
+            workflow_status: "SUCCESS"
+
+      rescue:
+
+        - name: Simulate rollback
+          ansible.builtin.debug:
+            msg: "ROLLBACK EXECUTED"
+
+        - name: Record rollback result
+          ansible.builtin.set_fact:
+            workflow_status: "ROLLED_BACK"
+            rollback_executed: true
+
+      always:
+
+        - name: Display workflow summary
+          ansible.builtin.debug:
+            msg:
+              - "WORKFLOW STATUS: {{ workflow_status }}"
+              - "ROLLBACK EXECUTED: {{ rollback_executed }}"
+
+    - name: Fail workflow if deployment was unsuccessful
+      ansible.builtin.assert:
+        that:
+          - workflow_status == "SUCCESS"
+        success_msg: "CHANGE WORKFLOW SUCCESSFUL"
+        fail_msg: "CHANGE WORKFLOW FAILED - {{ workflow_status }}"

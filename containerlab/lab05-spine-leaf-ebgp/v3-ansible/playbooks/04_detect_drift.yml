@@ -1,0 +1,44 @@
+---
+- name: Lab 05 v3 - BGP Configuration Drift Detection
+  hosts: leaf1
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Collect FRRouting running configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ container_name }}"
+          - vtysh
+          - -c
+          - show running-config
+      register: running_config
+      changed_when: false
+
+    - name: Extract BGP configuration
+      ansible.builtin.set_fact:
+        actual_bgp: >-
+          {{
+            running_config.stdout
+            | regex_search('(?ms)^router bgp .*?^ exit-address-family')
+            | default('', true)
+          }}
+
+    - name: Read generated BGP configuration
+      ansible.builtin.set_fact:
+        desired_bgp: >-
+          {{
+            lookup('ansible.builtin.file',
+                   playbook_dir ~ '/../generated/' ~ inventory_hostname ~ '_bgp.conf')
+            | regex_search('(?ms)^router bgp .*?^ exit-address-family')
+            | default('', true)
+          }}
+
+    - name: Compare actual and desired BGP configuration
+      ansible.builtin.assert:
+        that:
+          - actual_bgp | trim == desired_bgp | trim
+        fail_msg: "{{ inventory_hostname }}: CONFIGURATION DRIFT DETECTED"
+        success_msg: "{{ inventory_hostname }}: CONFIGURATION IN SYNC"

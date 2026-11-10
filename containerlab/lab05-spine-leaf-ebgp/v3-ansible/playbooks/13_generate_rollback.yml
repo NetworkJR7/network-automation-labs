@@ -1,0 +1,58 @@
+---
+- name: Lab 05 v3.15 - State-Aware Rollback Generation
+  hosts: leaf1
+  connection: local
+  gather_facts: false
+
+  vars:
+    bgp_neighbor: "10.0.11.0"
+
+  tasks:
+
+    - name: Read current configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ container_name }}"
+          - vtysh
+          - -c
+          - show running-config
+      register: running_config
+      changed_when: false
+
+    - name: Extract existing description
+      ansible.builtin.set_fact:
+        description_lines: >-
+          {{
+            running_config.stdout_lines
+            | map('trim')
+            | select('match', '^neighbor ' ~ bgp_neighbor ~ ' description(?: |$)')
+            | list
+          }}
+
+    - name: Validate description inventory
+      ansible.builtin.assert:
+        that:
+          - description_lines | length <= 1
+        fail_msg: "Multiple neighbor descriptions detected"
+
+    - name: Capture original description
+      ansible.builtin.set_fact:
+        previous_description: >-
+          {{
+            description_lines[0]
+            | regex_replace('^neighbor ' ~ bgp_neighbor ~ ' description ?', '')
+            if description_lines | length > 0
+            else ''
+          }}
+
+    - name: Generate rollback command
+      ansible.builtin.template:
+        src: ../templates/rollback_description.j2
+        dest: "{{ playbook_dir }}/../generated/leaf1_rollback.txt"
+        mode: "0600"
+
+    - name: Display generated rollback
+      ansible.builtin.debug:
+        msg: "Rollback generated: {{ lookup('file', playbook_dir ~ '/../generated/leaf1_rollback.txt') | trim }}"

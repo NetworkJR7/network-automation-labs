@@ -1,0 +1,36 @@
+---
+- name: Lab 05 v3.16 - Validate Generated Rollback
+  hosts: leaf1
+  connection: local
+  gather_facts: false
+
+  vars:
+    bgp_neighbor: "10.0.11.0"
+    expected_rollback: "no neighbor 10.0.11.0 description"
+
+  tasks:
+
+    - name: Read generated rollback
+      ansible.builtin.set_fact:
+        rollback_command: >-
+          {{
+            lookup(
+              'ansible.builtin.file',
+              playbook_dir ~ '/../generated/leaf1_rollback.txt'
+            ) | trim
+          }}
+
+    - name: Validate rollback command
+      ansible.builtin.assert:
+        that:
+          - rollback_command == expected_rollback
+        success_msg: "LEAF1: ROLLBACK COMMAND VERIFIED"
+        fail_msg: "LEAF1: INVALID ROLLBACK COMMAND"
+
+    - name: Display rollback information
+      ansible.builtin.debug:
+        msg:
+          - "DEVICE: {{ inventory_hostname }}"
+          - "NEIGHBOR: {{ bgp_neighbor }}"
+          - "ROLLBACK: {{ rollback_command }}"
+          - "STATUS: READY FOR CONTROLLED TEST"

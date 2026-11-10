@@ -1,0 +1,74 @@
+---
+- name: Lab 05 v3.11 - Network Change Workflow
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    lab_root: "{{ playbook_dir }}/../.."
+    inventory_file: "{{ playbook_dir }}/../inventory/hosts.yml"
+    validation_only: true
+
+  tasks:
+
+    - name: Initialize workflow status
+      ansible.builtin.set_fact:
+        workflow_status: "NOT_STARTED"
+
+    - name: Execute network change workflow
+      block:
+
+        - name: Validate BGP sessions
+          ansible.builtin.command:
+            argv:
+              - ansible-playbook
+              - -i
+              - "{{ inventory_file }}"
+              - "{{ playbook_dir }}/02_validate_bgp.yml"
+          register: bgp_check
+          changed_when: false
+
+        - name: Validate complete fabric
+          ansible.builtin.command:
+            argv:
+              - python3
+              - v2-automation/fabric_health_check.py
+            chdir: "{{ lab_root }}"
+          register: fabric_check
+          changed_when: false
+          failed_when: >-
+            fabric_check.rc != 0 or
+            'FABRIC STATUS: HEALTHY' not in fabric_check.stdout
+
+        - name: Confirm pre-check
+          ansible.builtin.debug:
+            msg: "PRE-CHECK PASSED: BGP / RIB / FIB / ECMP"
+
+        - name: Validation-only checkpoint
+          ansible.builtin.debug:
+            msg: "VALIDATION ONLY: No configuration changes applied"
+          when: validation_only | bool
+
+        - name: Mark validation completed
+          ansible.builtin.set_fact:
+            workflow_status: "VALIDATED"
+
+      rescue:
+
+        - name: Record validation failure
+          ansible.builtin.set_fact:
+            workflow_status: "PRECHECK_FAILED"
+
+      always:
+
+        - name: Display workflow summary
+          ansible.builtin.debug:
+            msg:
+              - "WORKFLOW STATUS: {{ workflow_status }}"
+              - "VALIDATION ONLY: {{ validation_only }}"
+
+    - name: Enforce successful validation
+      ansible.builtin.assert:
+        that:
+          - workflow_status == "VALIDATED"
+        success_msg: "NETWORK VALIDATION SUCCESSFUL"
+        fail_msg: "NETWORK VALIDATION FAILED"

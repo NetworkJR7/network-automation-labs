@@ -1,0 +1,5 @@
+{% if previous_description | length > 0 %}
+neighbor {{ bgp_neighbor }} description {{ previous_description }}
+{% else %}
+no neighbor {{ bgp_neighbor }} description
+{% endif %}

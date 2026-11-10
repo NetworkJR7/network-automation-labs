@@ -1,0 +1,69 @@
+---
+- name: Lab 05 v3.6 - Safe Pre-check and Backup
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    lab_root: "{{ playbook_dir }}/../.."
+    inventory_file: "{{ playbook_dir }}/../inventory/hosts.yml"
+    backup_dir: "{{ playbook_dir }}/../backups"
+
+  tasks:
+
+    - name: Run Ansible BGP validation
+      ansible.builtin.command:
+        argv:
+          - ansible-playbook
+          - -i
+          - "{{ inventory_file }}"
+          - "{{ playbook_dir }}/02_validate_bgp.yml"
+      register: bgp_validation
+      changed_when: false
+
+    - name: Run Python Fabric Health Check
+      ansible.builtin.command:
+        argv:
+          - python3
+          - v2-automation/fabric_health_check.py
+        chdir: "{{ lab_root }}"
+      register: fabric_validation
+      changed_when: false
+      failed_when: >
+        fabric_validation.rc != 0 or
+        'FABRIC STATUS: HEALTHY' not in fabric_validation.stdout
+
+    - name: Confirm Pre-check
+      ansible.builtin.debug:
+        msg: "PRE-CHECK PASSED: BGP and Fabric HEALTHY"
+
+    - name: Create backup directory
+      ansible.builtin.file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: "0700"
+
+    - name: Collect FRRouting configurations
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ hostvars[item].container_name }}"
+          - vtysh
+          - -c
+          - show running-config
+      loop: "{{ groups['all'] }}"
+      register: running_configs
+      changed_when: false
+
+    - name: Save configuration backups
+      ansible.builtin.copy:
+        content: "{{ item.stdout ~ '\n' }}"
+        dest: "{{ backup_dir }}/{{ item.item }}_prechange.conf"
+        mode: "0600"
+      loop: "{{ running_configs.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Display backup summary
+      ansible.builtin.debug:
+        msg: "PRE-CHECK PASSED - All device backups saved"

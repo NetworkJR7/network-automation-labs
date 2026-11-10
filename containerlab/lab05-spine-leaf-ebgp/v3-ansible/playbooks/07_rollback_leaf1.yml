@@ -1,0 +1,53 @@
+---
+- name: Lab 05 v3.8 - Controlled BGP Rollback
+  hosts: leaf1
+  connection: local
+  gather_facts: false
+
+  tasks:
+
+    - name: Read current Leaf1 configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ container_name }}"
+          - vtysh
+          - -c
+          - show running-config
+      register: running_config
+      changed_when: false
+
+    - name: Remove BGP neighbor description if present
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ container_name }}"
+          - vtysh
+          - -c
+          - configure terminal
+          - -c
+          - router bgp 65101
+          - -c
+          - no neighbor 10.0.11.0 description
+      when: "'neighbor 10.0.11.0 description SPINE1-UPLINK' in running_config.stdout"
+
+    - name: Verify description was removed
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ container_name }}"
+          - vtysh
+          - -c
+          - show running-config
+      register: verification
+      changed_when: false
+
+    - name: Assert rollback succeeded
+      ansible.builtin.assert:
+        that:
+          - "'neighbor 10.0.11.0 description' not in verification.stdout"
+        success_msg: "LEAF1: ROLLBACK SUCCESSFUL"
+        fail_msg: "LEAF1: ROLLBACK FAILED"

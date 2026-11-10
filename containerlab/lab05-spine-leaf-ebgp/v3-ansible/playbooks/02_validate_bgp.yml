@@ -1,0 +1,57 @@
+---
+- name: Lab 05 v3 - Validate eBGP Health
+  hosts: all
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Collect BGP summary as JSON
+      ansible.builtin.command:
+        argv:
+          - docker
+          - exec
+          - "{{ container_name }}"
+          - vtysh
+          - -c
+          - show bgp ipv4 unicast summary json
+      register: bgp_result
+      changed_when: false
+
+    - name: Parse BGP JSON
+      ansible.builtin.set_fact:
+        bgp_data: "{{ bgp_result.stdout | from_json }}"
+
+    - name: Validate local ASN
+      ansible.builtin.assert:
+        that:
+          - bgp_data['as'] | int == expected_as | int
+        fail_msg: "{{ inventory_hostname }}: Incorrect local ASN"
+        success_msg: "{{ inventory_hostname }}: Local ASN verified"
+
+    - name: Validate expected neighbor count
+      ansible.builtin.assert:
+        that:
+          - bgp_data.peerCount | int == expected_neighbors | length
+          - bgp_data.peers.keys() | list | sort == expected_neighbors.keys() | list | sort
+        fail_msg: "{{ inventory_hostname }}: Unexpected BGP neighbor inventory"
+        success_msg: "{{ inventory_hostname }}: Neighbor inventory verified"
+
+    - name: Validate every BGP neighbor
+      ansible.builtin.assert:
+        that:
+          - bgp_data.peers[item.key] is defined
+          - (bgp_data.peers[item.key].remoteAs | default(-1) | int) == (item.value | int)
+          - bgp_data.peers[item.key].state | default('Missing') == 'Established'
+          - bgp_data.peers[item.key].pfxRcd | default(0) | int > 0
+        fail_msg: >-
+          {{ inventory_hostname }}: BGP neighbor {{ item.key }}
+          failed validation.
+        success_msg: >-
+          {{ inventory_hostname }}: Neighbor {{ item.key }} HEALTHY
+      loop: "{{ expected_neighbors | dict2items }}"
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: Display node health
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname | upper }}: BGP HEALTHY"
